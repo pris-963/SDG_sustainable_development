@@ -1,0 +1,2387 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Maternal Health SDG 3.1 Dashboard</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: Inter, Arial, Helvetica, sans-serif;
+            background: #0b1120;
+            color: #e5e7eb;
+            min-height: 100vh;
+        }
+
+        button,
+        select {
+            font-family: inherit;
+        }
+
+        /* =========================================
+           LAYOUT
+        ========================================= */
+
+        .app {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* =========================================
+           SIDEBAR
+        ========================================= */
+
+        .sidebar {
+            width: 245px;
+            background: #111827;
+            border-right: 1px solid #1f2937;
+            padding: 24px 16px;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 8px 28px;
+            border-bottom: 1px solid #1f2937;
+            margin-bottom: 22px;
+        }
+
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            font-size: 21px;
+            font-weight: bold;
+        }
+
+        .logo-text h1 {
+            font-size: 15px;
+            color: white;
+            line-height: 1.2;
+        }
+
+        .logo-text p {
+            font-size: 10px;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-item {
+            width: 100%;
+            border: none;
+            background: transparent;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 13px 15px;
+            margin-bottom: 5px;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 14px;
+            transition: 0.2s ease;
+        }
+
+        .nav-item:hover {
+            background: #1f2937;
+            color: white;
+        }
+
+        .nav-item.active {
+            background: rgba(99, 102, 241, 0.18);
+            color: white;
+            box-shadow: inset 3px 0 0 #6366f1;
+        }
+
+        .nav-icon {
+            width: 22px;
+            text-align: center;
+            font-size: 17px;
+        }
+
+        .nav-label {
+            margin: 25px 15px 10px;
+            color: #64748b;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+        }
+
+        /* =========================================
+           MAIN
+        ========================================= */
+
+        .main {
+            margin-left: 245px;
+            width: calc(100% - 245px);
+            padding: 30px;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 28px;
+        }
+
+        .page-title h2 {
+            font-size: 28px;
+            color: white;
+            margin-bottom: 6px;
+        }
+
+        .page-title p {
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .connection {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #111827;
+            border: 1px solid #1f2937;
+            padding: 9px 13px;
+            border-radius: 9px;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #f59e0b;
+        }
+
+        .status-dot.online {
+            background: #22c55e;
+        }
+
+        .status-dot.offline {
+            background: #ef4444;
+        }
+
+        .refresh-btn {
+            border: 1px solid #334155;
+            background: #111827;
+            color: #cbd5e1;
+            padding: 9px 14px;
+            border-radius: 9px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .refresh-btn:hover {
+            background: #1e293b;
+            color: white;
+        }
+
+        /* =========================================
+           AREA SELECTOR
+        ========================================= */
+
+        .control-panel {
+            background: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .control-info h3 {
+            color: white;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .control-info p {
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        .area-select {
+            min-width: 230px;
+            padding: 11px 13px;
+            border-radius: 9px;
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: white;
+            outline: none;
+        }
+
+        /* =========================================
+           SECTIONS
+        ========================================= */
+
+        .dashboard-section {
+            scroll-margin-top: 25px;
+            margin-bottom: 30px;
+        }
+
+        .section-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .section-heading h3 {
+            color: white;
+            font-size: 18px;
+        }
+
+        .section-heading span {
+            color: #64748b;
+            font-size: 12px;
+        }
+
+        /* =========================================
+           KPI CARDS
+        ========================================= */
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .kpi-card {
+            background: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 14px;
+            padding: 20px;
+            min-height: 125px;
+        }
+
+        .kpi-label {
+            color: #64748b;
+            font-size: 12px;
+            margin-bottom: 12px;
+        }
+
+        .kpi-value {
+            font-size: 27px;
+            font-weight: 700;
+            color: white;
+        }
+
+        .kpi-sub {
+            color: #64748b;
+            font-size: 11px;
+            margin-top: 8px;
+        }
+
+        /* =========================================
+           CHART GRID
+        ========================================= */
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+
+        .chart-card {
+            background: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 14px;
+            padding: 20px;
+            min-height: 350px;
+        }
+
+        .chart-card.full {
+            grid-column: 1 / -1;
+        }
+
+        .chart-title {
+            color: white;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .chart-description {
+            color: #64748b;
+            font-size: 11px;
+            margin-bottom: 15px;
+        }
+
+        .chart-container {
+            height: 270px;
+            position: relative;
+        }
+
+        /* =========================================
+           PREDICTION
+        ========================================= */
+
+        .prediction-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.4fr;
+            gap: 18px;
+        }
+
+        .prediction-card,
+        .forecast-card {
+            background: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 14px;
+            padding: 22px;
+        }
+
+        .prediction-main {
+            text-align: center;
+            padding: 25px 10px;
+        }
+
+        .prediction-label {
+            color: #64748b;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        .prediction-value {
+            font-size: 48px;
+            font-weight: 800;
+            color: white;
+        }
+
+        .prediction-unit {
+            color: #64748b;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .prediction-status {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 9px;
+            text-align: center;
+            background: #1e293b;
+            color: #cbd5e1;
+            font-size: 13px;
+        }
+
+        .target-box {
+            margin-top: 14px;
+            padding: 13px;
+            border: 1px solid #1f2937;
+            border-radius: 9px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+        }
+
+        .target-box span:first-child {
+            color: #64748b;
+        }
+
+        .target-box span:last-child {
+            color: white;
+            font-weight: bold;
+        }
+
+        /* =========================================
+           SDG PROGRESS
+        ========================================= */
+
+        .sdg-grid {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 18px;
+        }
+
+        .progress-card,
+        .sdg-info {
+            background: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 14px;
+            padding: 25px;
+        }
+
+        .circle-wrapper {
+            width: 190px;
+            height: 190px;
+            border-radius: 50%;
+            margin: 10px auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: conic-gradient(
+                #6366f1 0deg,
+                #6366f1 var(--progress-angle, 0deg),
+                #1e293b var(--progress-angle, 0deg),
+                #1e293b 360deg
+            );
+            position: relative;
+        }
+
+        .circle-wrapper::after {
+            content: "";
+            position: absolute;
+            width: 145px;
+            height: 145px;
+            border-radius: 50%;
+            background: #111827;
+        }
+
+        .circle-value {
+            position: relative;
+            z-index: 2;
+            font-size: 30px;
+            font-weight: 800;
+            color: white;
+        }
+
+        .progress-title {
+            text-align: center;
+            color: white;
+            font-size: 15px;
+        }
+
+        .sdg-info h4 {
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .sdg-info p {
+            color: #94a3b8;
+            font-size: 13px;
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+
+        .sdg-target {
+            border-left: 3px solid #6366f1;
+            padding-left: 14px;
+            color: #cbd5e1;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        /* =========================================
+           RANKINGS
+        ========================================= */
+
+        .table-card {
+            background: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 14px;
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 15px 18px;
+            color: #64748b;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            background: #0f172a;
+        }
+
+        td {
+            padding: 15px 18px;
+            border-top: 1px solid #1f2937;
+            color: #cbd5e1;
+            font-size: 13px;
+        }
+
+        tr:hover td {
+            background: #151e2e;
+        }
+
+        .rank-number {
+            color: #818cf8;
+            font-weight: bold;
+        }
+
+        .mmr-value {
+            color: white;
+            font-weight: bold;
+        }
+
+        /* =========================================
+           MODEL
+        ========================================= */
+
+        .model-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .model-card {
+            background: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 14px;
+            padding: 20px;
+        }
+
+        .model-card h4 {
+            color: white;
+            margin-bottom: 9px;
+        }
+
+        .model-card p {
+            color: #64748b;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        /* =========================================
+           LOADING / ERROR
+        ========================================= */
+
+        .loading {
+            color: #64748b;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .error-box {
+            display: none;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+
+        .error-box.show {
+            display: block;
+        }
+
+        /* =========================================
+           FOOTER
+        ========================================= */
+
+        .footer {
+            text-align: center;
+            color: #475569;
+            font-size: 11px;
+            padding: 30px 0 10px;
+        }
+
+        /* =========================================
+           RESPONSIVE
+        ========================================= */
+
+        @media (max-width: 1100px) {
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .model-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 850px) {
+            .sidebar {
+                width: 70px;
+                padding: 20px 10px;
+            }
+
+            .logo-text,
+            .nav-item span:last-child,
+            .nav-label {
+                display: none;
+            }
+
+            .logo {
+                justify-content: center;
+                padding: 0 0 20px;
+            }
+
+            .nav-item {
+                justify-content: center;
+                padding: 13px 5px;
+            }
+
+            .main {
+                margin-left: 70px;
+                width: calc(100% - 70px);
+                padding: 20px;
+            }
+
+            .chart-grid,
+            .prediction-grid,
+            .sdg-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .chart-card.full {
+                grid-column: auto;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .main {
+                padding: 15px;
+            }
+
+            .topbar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .top-actions {
+                width: 100%;
+            }
+
+            .control-panel {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .area-select {
+                width: 100%;
+            }
+
+            .kpi-grid,
+            .model-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .page-title h2 {
+                font-size: 22px;
+            }
+
+            .prediction-value {
+                font-size: 40px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- =========================================
+         SIDEBAR
+    ========================================== -->
+
+    <aside class="sidebar">
+
+        <div class="logo">
+            <div class="logo-icon">M</div>
+
+            <div class="logo-text">
+                <h1>Maternal Health</h1>
+                <p>SDG 3.1 ANALYTICS</p>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+
+            <button class="nav-item active" data-target="overviewSection">
+                <span class="nav-icon">◉</span>
+                <span>Overview</span>
+            </button>
+
+            <button class="nav-item" data-target="mmrSection">
+                <span class="nav-icon">↗</span>
+                <span>MMR Analysis</span>
+            </button>
+
+            <button class="nav-item" data-target="predictionSection">
+                <span class="nav-icon">◆</span>
+                <span>Prediction</span>
+            </button>
+
+            <button class="nav-item" data-target="sdgSection">
+                <span class="nav-icon">◆</span>
+                <span>SDG Progress</span>
+            </button>
+
+            <div class="nav-label">DATA</div>
+
+            <button class="nav-item" data-target="rankingSection">
+                <span class="nav-icon">▤</span>
+                <span>Area Rankings</span>
+            </button>
+
+            <button class="nav-item" data-target="modelSection">
+                <span class="nav-icon">⚙</span>
+                <span>Model</span>
+            </button>
+
+        </nav>
+
+    </aside>
+
+
+    <!-- =========================================
+         MAIN CONTENT
+    ========================================== -->
+
+    <main class="main">
+
+        <!-- TOP BAR -->
+
+        <div class="topbar">
+
+            <div class="page-title">
+                <h2>Maternal Health Dashboard</h2>
+                <p>Tracking progress toward Sustainable Development Goal 3.1</p>
+            </div>
+
+            <div class="top-actions">
+
+                <div class="connection">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span id="connectionText">Connecting...</span>
+                </div>
+
+                <button class="refresh-btn" onclick="loadDashboard()">
+                    ↻ Refresh
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- ERROR -->
+
+        <div class="error-box" id="errorBox"></div>
+
+
+        <!-- AREA SELECTOR -->
+
+        <div class="control-panel">
+
+            <div class="control-info">
+                <h3>Analysis Area</h3>
+                <p>Select an area to view detailed maternal health statistics.</p>
+            </div>
+
+            <select class="area-select" id="areaSelect">
+                <option value="">Loading areas...</option>
+            </select>
+
+        </div>
+
+
+        <!-- =========================================
+             OVERVIEW
+        ========================================== -->
+
+        <section class="dashboard-section" id="overviewSection">
+
+            <div class="section-heading">
+                <h3>Overview</h3>
+                <span>Maternal mortality indicators</span>
+            </div>
+
+            <div class="kpi-grid">
+
+                <div class="kpi-card">
+                    <div class="kpi-label">Average MMR</div>
+                    <div class="kpi-value" id="avgMMR">—</div>
+                    <div class="kpi-sub">per 100,000 live births</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-label">Latest Year</div>
+                    <div class="kpi-value" id="latestYear">—</div>
+                    <div class="kpi-sub">Latest available data</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-label">Areas Covered</div>
+                    <div class="kpi-value" id="areaCount">—</div>
+                    <div class="kpi-sub">Areas in dataset</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-label">SDG Target</div>
+                    <div class="kpi-value">&lt;70</div>
+                    <div class="kpi-sub">per 100,000 by 2030</div>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================================
+             MMR ANALYSIS
+        ========================================== -->
+
+        <section class="dashboard-section" id="mmrSection">
+
+            <div class="section-heading">
+                <h3>MMR Analysis</h3>
+                <span>Historical maternal mortality trends</span>
+            </div>
+
+            <div class="chart-grid">
+
+                <div class="chart-card">
+
+                    <div class="chart-title">
+                        Overall MMR Trend
+                    </div>
+
+                    <div class="chart-description">
+                        Average maternal mortality ratio over time
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="globalTrendChart"></canvas>
+                    </div>
+
+                </div>
+
+
+                <div class="chart-card">
+
+                    <div class="chart-title">
+                        Selected Area Trend
+                    </div>
+
+                    <div class="chart-description" id="areaChartTitle">
+                        Select an area above
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="areaTrendChart"></canvas>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================================
+             PREDICTION
+        ========================================== -->
+
+        <section class="dashboard-section" id="predictionSection">
+
+            <div class="section-heading">
+                <h3>Prediction</h3>
+                <span>Linear regression forecast</span>
+            </div>
+
+            <div class="prediction-grid">
+
+                <div class="prediction-card">
+
+                    <div class="prediction-main">
+
+                        <div class="prediction-label">
+                            Predicted MMR for 2030
+                        </div>
+
+                        <div class="prediction-value" id="predictionValue">
+                            —
+                        </div>
+
+                        <div class="prediction-unit">
+                            per 100,000 live births
+                        </div>
+
+                        <div class="prediction-status" id="predictionStatus">
+                            Select an area
+                        </div>
+
+                    </div>
+
+                    <div class="target-box">
+                        <span>SDG 3.1 Target</span>
+                        <span>&lt; 70</span>
+                    </div>
+
+                </div>
+
+
+                <div class="forecast-card">
+
+                    <div class="chart-title">
+                        Historical vs Predicted MMR
+                    </div>
+
+                    <div class="chart-description">
+                        Forecast based on historical trend
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="predictionChart"></canvas>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================================
+             SDG PROGRESS
+        ========================================== -->
+
+        <section class="dashboard-section" id="sdgSection">
+
+            <div class="section-heading">
+                <h3>SDG Progress</h3>
+                <span>Progress toward SDG 3.1</span>
+            </div>
+
+            <div class="sdg-grid">
+
+                <div class="progress-card">
+
+                    <div class="circle-wrapper" id="progressCircle">
+
+                        <div class="circle-value" id="progressValue">
+                            —
+                        </div>
+
+                    </div>
+
+                    <div class="progress-title">
+                        Progress toward target
+                    </div>
+
+                </div>
+
+
+                <div class="sdg-info">
+
+                    <h4>SDG 3.1 — Maternal Mortality</h4>
+
+                    <p>
+                        Sustainable Development Goal 3.1 aims to reduce the
+                        global maternal mortality ratio to less than
+                        70 deaths per 100,000 live births by 2030.
+                    </p>
+
+                    <div class="sdg-target">
+                        <strong>Target:</strong>
+                        Reduce maternal mortality to below 70 per 100,000
+                        live births by 2030.
+                    </div>
+
+                    <br>
+
+                    <div class="sdg-target">
+                        <strong>Current Area:</strong>
+                        <span id="sdgAreaName">—</span>
+                    </div>
+
+                    <br>
+
+                    <div class="sdg-target">
+                        <strong>Current MMR:</strong>
+                        <span id="sdgCurrentMMR">—</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================================
+             RANKINGS
+        ========================================== -->
+
+        <section class="dashboard-section" id="rankingSection">
+
+            <div class="section-heading">
+                <h3>Area Rankings</h3>
+                <span>Based on latest MMR values</span>
+            </div>
+
+            <div class="table-card">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Area</th>
+                            <th>MMR</th>
+                            <th>Year</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="rankingTable">
+
+                        <tr>
+                            <td colspan="5" class="loading">
+                                Loading rankings...
+                            </td>
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================================
+             MODEL
+        ========================================== -->
+
+        <section class="dashboard-section" id="modelSection">
+
+            <div class="section-heading">
+                <h3>Model</h3>
+                <span>Prediction methodology</span>
+            </div>
+
+            <div class="model-grid">
+
+                <div class="model-card">
+
+                    <h4>Algorithm</h4>
+
+                    <p>
+                        Linear Regression is used to model the historical
+                        relationship between year and maternal mortality
+                        ratio.
+                    </p>
+
+                </div>
+
+
+                <div class="model-card">
+
+                    <h4>Input</h4>
+
+                    <p>
+                        Historical MMR values from SDG indicator 3.1.1
+                        are used as the primary input for prediction.
+                    </p>
+
+                </div>
+
+
+                <div class="model-card">
+
+                    <h4>Output</h4>
+
+                    <p>
+                        The model estimates future MMR values and provides
+                        a 2030 forecast that can be compared with the
+                        SDG target of 70.
+                    </p>
+
+                </div>
+
+
+                <div class="model-card">
+
+                    <h4>Evaluation</h4>
+
+                    <p>
+                        Mean Absolute Error, Root Mean Squared Error and
+                        R² can be used to evaluate the regression model.
+                    </p>
+
+                </div>
+
+
+                <div class="model-card">
+
+                    <h4>Indicator</h4>
+
+                    <p>
+                        SDG 3.1.1 — Maternal Mortality Ratio (MMR),
+                        measured per 100,000 live births.
+                    </p>
+
+                </div>
+
+
+                <div class="model-card">
+
+                    <h4>Dataset</h4>
+
+                    <p>
+                        Sustainable Development Goals National Indicator
+                        Framework dataset containing Indian area-level
+                        observations.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <div class="footer">
+            Maternal Health SDG 3.1 Dashboard · AI/ML Data Analysis Project
+        </div>
+
+    </main>
+
+</div>
+
+
+<script>
+
+/* =====================================================
+   CONFIGURATION
+===================================================== */
+
+const API_BASE = "http://127.0.0.1:8000";
+
+let globalChart = null;
+let areaChart = null;
+let predictionChart = null;
+
+let areas = [];
+
+
+/* =====================================================
+   DOM ELEMENTS
+===================================================== */
+
+const statusDot = document.getElementById("statusDot");
+const connectionText = document.getElementById("connectionText");
+const errorBox = document.getElementById("errorBox");
+const areaSelect = document.getElementById("areaSelect");
+
+
+/* =====================================================
+   API HELPER
+===================================================== */
+
+async function apiRequest(endpoint) {
+
+    const response = await fetch(API_BASE + endpoint);
+
+    if (!response.ok) {
+        throw new Error(
+            `API request failed: ${response.status} ${response.statusText}`
+        );
+    }
+
+    return await response.json();
+}
+
+
+/* =====================================================
+   CONNECTION STATUS
+===================================================== */
+
+async function checkConnection() {
+
+    try {
+
+        await apiRequest("/health");
+
+        statusDot.className = "status-dot online";
+        connectionText.textContent = "Backend Connected";
+
+    } catch (error) {
+
+        statusDot.className = "status-dot offline";
+        connectionText.textContent = "Backend Offline";
+
+        showError(
+            "Cannot connect to the FastAPI backend. Make sure app.py is running on port 8000."
+        );
+    }
+}
+
+
+/* =====================================================
+   ERROR HANDLING
+===================================================== */
+
+function showError(message) {
+
+    errorBox.textContent = message;
+    errorBox.classList.add("show");
+
+}
+
+
+function clearError() {
+
+    errorBox.textContent = "";
+    errorBox.classList.remove("show");
+
+}
+
+
+/* =====================================================
+   FORMAT NUMBER
+===================================================== */
+
+function formatNumber(value, decimals = 1) {
+
+    if (
+        value === null ||
+        value === undefined ||
+        value === "" ||
+        isNaN(Number(value))
+    ) {
+        return "—";
+    }
+
+    return Number(value).toFixed(decimals);
+}
+
+
+/* =====================================================
+   GET AREA NAME
+===================================================== */
+
+function getAreaName(item) {
+
+    if (typeof item === "string") {
+        return item;
+    }
+
+    return (
+        item.AreaName ||
+        item.area ||
+        item.country ||
+        item.name ||
+        item.Area ||
+        ""
+    );
+}
+
+
+/* =====================================================
+   LOAD OVERVIEW
+===================================================== */
+
+async function loadOverview() {
+
+    try {
+
+        const data = await apiRequest("/api/overview");
+
+        console.log("Overview:", data);
+
+        const avg =
+            data.average_mmr ??
+            data.avg_mmr ??
+            data.averageMMR ??
+            data.mean_mmr;
+
+        const year =
+            data.latest_year ??
+            data.latestYear ??
+            data.year;
+
+        const count =
+            data.area_count ??
+            data.areaCount ??
+            data.countries ??
+            data.total_areas;
+
+        document.getElementById("avgMMR").textContent =
+            formatNumber(avg);
+
+        document.getElementById("latestYear").textContent =
+            year ?? "—";
+
+        document.getElementById("areaCount").textContent =
+            count ?? areas.length ?? "—";
+
+    } catch (error) {
+
+        console.error("Overview error:", error);
+
+    }
+}
+
+
+/* =====================================================
+   LOAD AREAS
+===================================================== */
+
+async function loadAreas() {
+
+    try {
+
+        const data = await apiRequest("/api/countries");
+
+        console.log("Areas:", data);
+
+        if (Array.isArray(data)) {
+
+            areas = data;
+
+        } else if (data.countries) {
+
+            areas = data.countries;
+
+        } else if (data.areas) {
+
+            areas = data.areas;
+
+        } else {
+
+            areas = [];
+
+        }
+
+        areaSelect.innerHTML = "";
+
+        if (areas.length === 0) {
+
+            areaSelect.innerHTML =
+                `<option value="">No areas found</option>`;
+
+            return;
+        }
+
+        areas.forEach((item, index) => {
+
+            const name = getAreaName(item);
+
+            if (!name) return;
+
+            const option = document.createElement("option");
+
+            option.value = name;
+            option.textContent = name;
+
+            areaSelect.appendChild(option);
+
+        });
+
+        if (areaSelect.options.length > 0) {
+
+            areaSelect.selectedIndex = 0;
+
+            await loadArea(areaSelect.value);
+        }
+
+    } catch (error) {
+
+        console.error("Areas error:", error);
+
+        areaSelect.innerHTML =
+            `<option value="">Unable to load areas</option>`;
+
+    }
+}
+
+
+/* =====================================================
+   LOAD GLOBAL TREND
+===================================================== */
+
+async function loadGlobalTrend() {
+
+    try {
+
+        const data = await apiRequest("/api/trend");
+
+        console.log("Global trend:", data);
+
+        let rows = Array.isArray(data)
+            ? data
+            : (
+                data.data ||
+                data.trend ||
+                data.results ||
+                []
+            );
+
+        const labels = [];
+        const values = [];
+
+        rows.forEach(row => {
+
+            const year =
+                row.Year ??
+                row.year ??
+                row.TimePeriod ??
+                row.time;
+
+            const value =
+                row.MMR ??
+                row.mmr ??
+                row.DataValue ??
+                row.value ??
+                row.average_mmr;
+
+            if (
+                year !== undefined &&
+                value !== undefined &&
+                !isNaN(Number(value))
+            ) {
+
+                labels.push(String(year));
+                values.push(Number(value));
+
+            }
+
+        });
+
+        createGlobalChart(labels, values);
+
+    } catch (error) {
+
+        console.error("Global trend error:", error);
+
+    }
+}
+
+
+/* =====================================================
+   CREATE GLOBAL CHART
+===================================================== */
+
+function createGlobalChart(labels, values) {
+
+    const canvas = document.getElementById("globalTrendChart");
+
+    if (globalChart) {
+        globalChart.destroy();
+    }
+
+    globalChart = new Chart(canvas, {
+
+        type: "line",
+
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "Average MMR",
+                data: values,
+                borderColor: "#818cf8",
+                backgroundColor: "rgba(129, 140, 248, 0.12)",
+                fill: true,
+                tension: 0.35,
+                pointRadius: 4
+            }]
+        },
+
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+
+            plugins: {
+                legend: {
+                    labels: {
+                        color: "#94a3b8"
+                    }
+                }
+            },
+
+            scales: {
+
+                x: {
+                    ticks: {
+                        color: "#64748b"
+                    },
+                    grid: {
+                        color: "rgba(255,255,255,0.05)"
+                    }
+                },
+
+                y: {
+                    ticks: {
+                        color: "#64748b"
+                    },
+                    grid: {
+                        color: "rgba(255,255,255,0.05)"
+                    }
+                }
+
+            }
+
+        }
+
+    });
+
+}
+
+
+/* =====================================================
+   AREA SELECT CHANGE
+===================================================== */
+
+areaSelect.addEventListener("change", async function () {
+
+    if (!this.value) return;
+
+    await loadArea(this.value);
+
+});
+
+
+/* =====================================================
+   LOAD SELECTED AREA
+===================================================== */
+
+async function loadArea(area) {
+
+    if (!area) return;
+
+    clearError();
+
+    console.log("Loading area:", area);
+
+    document.getElementById("areaChartTitle").textContent =
+        area + " — MMR trend";
+
+    document.getElementById("sdgAreaName").textContent =
+        area;
+
+    try {
+
+        await Promise.all([
+            loadAreaDetails(area),
+            loadAreaTrend(area),
+            loadPrediction(area),
+            loadSDGProgress(area)
+        ]);
+
+    } catch (error) {
+
+        console.error("Area loading error:", error);
+
+    }
+
+}
+
+
+/* =====================================================
+   AREA DETAILS
+===================================================== */
+
+async function loadAreaDetails(area) {
+
+    try {
+
+        const encodedArea = encodeURIComponent(area);
+
+        const data = await apiRequest(
+            `/api/country/${encodedArea}`
+        );
+
+        console.log("Area details:", data);
+
+        const mmr =
+            data.MMR ??
+            data.mmr ??
+            data.DataValue ??
+            data.latest_mmr ??
+            data.value;
+
+        if (mmr !== undefined) {
+
+            document.getElementById("sdgCurrentMMR").textContent =
+                formatNumber(mmr);
+
+        }
+
+    } catch (error) {
+
+        console.error("Area details error:", error);
+
+    }
+
+}
+
+
+/* =====================================================
+   AREA TREND
+===================================================== */
+
+async function loadAreaTrend(area) {
+
+    try {
+
+        const encodedArea = encodeURIComponent(area);
+
+        const data = await apiRequest(
+            `/api/country/${encodedArea}/trend`
+        );
+
+        console.log("Area trend:", data);
+
+        let rows = Array.isArray(data)
+            ? data
+            : (
+                data.data ||
+                data.trend ||
+                data.results ||
+                []
+            );
+
+        const labels = [];
+        const values = [];
+
+        rows.forEach(row => {
+
+            const year =
+                row.Year ??
+                row.year ??
+                row.TimePeriod ??
+                row.time;
+
+            const value =
+                row.MMR ??
+                row.mmr ??
+                row.DataValue ??
+                row.value;
+
+            if (
+                year !== undefined &&
+                value !== undefined &&
+                !isNaN(Number(value))
+            ) {
+
+                labels.push(String(year));
+                values.push(Number(value));
+
+            }
+
+        });
+
+        createAreaChart(labels, values);
+
+    } catch (error) {
+
+        console.error("Area trend error:", error);
+
+    }
+
+}
+
+
+/* =====================================================
+   CREATE AREA CHART
+===================================================== */
+
+function createAreaChart(labels, values) {
+
+    const canvas = document.getElementById("areaTrendChart");
+
+    if (areaChart) {
+        areaChart.destroy();
+    }
+
+    areaChart = new Chart(canvas, {
+
+        type: "line",
+
+        data: {
+            labels: labels,
+
+            datasets: [{
+                label: "MMR",
+                data: values,
+                borderColor: "#22c55e",
+                backgroundColor: "rgba(34, 197, 94, 0.10)",
+                fill: true,
+                tension: 0.35,
+                pointRadius: 4
+            }]
+
+        },
+
+        options: {
+
+            responsive: true,
+            maintainAspectRatio: false,
+
+            plugins: {
+
+                legend: {
+                    labels: {
+                        color: "#94a3b8"
+                    }
+                }
+
+            },
+
+            scales: {
+
+                x: {
+                    ticks: {
+                        color: "#64748b"
+                    },
+                    grid: {
+                        color: "rgba(255,255,255,0.05)"
+                    }
+                },
+
+                y: {
+                    ticks: {
+                        color: "#64748b"
+                    },
+                    grid: {
+                        color: "rgba(255,255,255,0.05)"
+                    }
+                }
+
+            }
+
+        }
+
+    });
+
+}
+
+
+/* =====================================================
+   LOAD PREDICTION
+===================================================== */
+
+async function loadPrediction(area) {
+
+    try {
+
+        const encodedArea = encodeURIComponent(area);
+
+        const data = await apiRequest(
+            `/api/prediction/${encodedArea}`
+        );
+
+        console.log("Prediction:", data);
+
+        const prediction =
+            data.prediction_2030 ??
+            data.predicted_mmr ??
+            data.prediction ??
+            data.mmr_2030 ??
+            data.value;
+
+        const status =
+            data.status ??
+            data.prediction_status ??
+            data.message ??
+            "Prediction generated";
+
+        document.getElementById("predictionValue").textContent =
+            formatNumber(prediction);
+
+        document.getElementById("predictionStatus").textContent =
+            status;
+
+        createPredictionChart(data);
+
+    } catch (error) {
+
+        console.error("Prediction error:", error);
+
+        document.getElementById("predictionValue").textContent =
+            "—";
+
+        document.getElementById("predictionStatus").textContent =
+            "Prediction unavailable";
+
+    }
+
+}
+
+
+/* =====================================================
+   PREDICTION CHART
+===================================================== */
+
+function createPredictionChart(data) {
+
+    let historical =
+        data.historical ||
+        data.history ||
+        [];
+
+    let forecast =
+        data.forecast ||
+        data.predictions ||
+        [];
+
+    const labels = [];
+    const historicalValues = [];
+    const forecastValues = [];
+
+    historical.forEach(row => {
+
+        const year =
+            row.Year ??
+            row.year;
+
+        const value =
+            row.MMR ??
+            row.mmr ??
+            row.value ??
+            row.DataValue;
+
+        if (
+            year !== undefined &&
+            value !== undefined
+        ) {
+
+            labels.push(String(year));
+            historicalValues.push(Number(value));
+            forecastValues.push(null);
+
+        }
+
+    });
+
+    forecast.forEach(row => {
+
+        const year =
+            row.Year ??
+            row.year;
+
+        const value =
+            row.MMR ??
+            row.mmr ??
+            row.value ??
+            row.prediction;
+
+        if (
+            year !== undefined &&
+            value !== undefined
+        ) {
+
+            if (!labels.includes(String(year))) {
+                labels.push(String(year));
+                historicalValues.push(null);
+            }
+
+            forecastValues.push(Number(value));
+
+        }
+
+    });
+
+    if (
+        labels.length === 0 &&
+        data.prediction !== undefined
+    ) {
+
+        labels.push("2030");
+
+        historicalValues.push(null);
+
+        forecastValues.push(
+            Number(data.prediction)
+        );
+
+    }
+
+    const canvas = document.getElementById("predictionChart");
+
+    if (predictionChart) {
+        predictionChart.destroy();
+    }
+
+    predictionChart = new Chart(canvas, {
+
+        type: "line",
+
+        data: {
+
+            labels: labels,
+
+            datasets: [
+
+                {
+                    label: "Historical",
+                    data: historicalValues,
+                    borderColor: "#818cf8",
+                    backgroundColor: "transparent",
+                    tension: 0.3,
+                    pointRadius: 4
+                },
+
+                {
+                    label: "Prediction",
+                    data: forecastValues,
+                    borderColor: "#f59e0b",
+                    backgroundColor: "transparent",
+                    borderDash: [6, 6],
+                    tension: 0.3,
+                    pointRadius: 4
+                }
+
+            ]
+
+        },
+
+        options: {
+
+            responsive: true,
+            maintainAspectRatio: false,
+
+            plugins: {
+
+                legend: {
+                    labels: {
+                        color: "#94a3b8"
+                    }
+                }
+
+            },
+
+            scales: {
+
+                x: {
+                    ticks: {
+                        color: "#64748b"
+                    },
+                    grid: {
+                        color: "rgba(255,255,255,0.05)"
+                    }
+                },
+
+                y: {
+                    ticks: {
+                        color: "#64748b"
+                    },
+                    grid: {
+                        color: "rgba(255,255,255,0.05)"
+                    }
+                }
+
+            }
+
+        }
+
+    });
+
+}
+
+
+/* =====================================================
+   LOAD SDG PROGRESS
+===================================================== */
+
+async function loadSDGProgress(area) {
+
+    try {
+
+        const encodedArea = encodeURIComponent(area);
+
+        const data = await apiRequest(
+            `/api/sdg-progress/${encodedArea}`
+        );
+
+        console.log("SDG progress:", data);
+
+        let progress =
+            data.progress ??
+            data.progress_percentage ??
+            data.percentage ??
+            data.score;
+
+        let current =
+            data.current_mmr ??
+            data.mmr ??
+            data.current_value;
+
+        if (current !== undefined) {
+
+            document.getElementById("sdgCurrentMMR").textContent =
+                formatNumber(current);
+
+        }
+
+        if (progress !== undefined) {
+
+            progress = Math.max(
+                0,
+                Math.min(100, Number(progress))
+            );
+
+            updateProgressCircle(progress);
+
+        }
+
+    } catch (error) {
+
+        console.error("SDG progress error:", error);
+
+    }
+
+}
+
+
+/* =====================================================
+   PROGRESS CIRCLE
+===================================================== */
+
+function updateProgressCircle(progress) {
+
+    const circle =
+        document.getElementById("progressCircle");
+
+    const value =
+        document.getElementById("progressValue");
+
+    const angle =
+        progress * 3.6;
+
+    circle.style.setProperty(
+        "--progress-angle",
+        `${angle}deg`
+    );
+
+    value.textContent =
+        `${Math.round(progress)}%`;
+
+}
+
+
+/* =====================================================
+   LOAD RANKINGS
+===================================================== */
+
+async function loadRankings() {
+
+    try {
+
+        const data = await apiRequest(
+            "/api/rankings?limit=10"
+        );
+
+        console.log("Rankings:", data);
+
+        let rows = Array.isArray(data)
+            ? data
+            : (
+                data.rankings ||
+                data.data ||
+                data.results ||
+                []
+            );
+
+        const table =
+            document.getElementById("rankingTable");
+
+        table.innerHTML = "";
+
+        if (rows.length === 0) {
+
+            table.innerHTML = `
+                <tr>
+                    <td colspan="5" class="loading">
+                        No ranking data available
+                    </td>
+                </tr>
+            `;
+
+            return;
+        }
+
+        rows.forEach((row, index) => {
+
+            const area =
+                row.AreaName ??
+                row.area ??
+                row.country ??
+                row.name ??
+                "Unknown";
+
+            const mmr =
+                row.MMR ??
+                row.mmr ??
+                row.DataValue ??
+                row.value;
+
+            const year =
+                row.Year ??
+                row.year ??
+                row.TimePeriod ??
+                "—";
+
+            let status = "Unknown";
+
+            if (mmr !== undefined) {
+
+                const numericMMR =
+                    Number(mmr);
+
+                if (numericMMR < 70) {
+                    status = "Target";
+                } else if (numericMMR <= 100) {
+                    status = "Near";
+                } else if (numericMMR <= 200) {
+                    status = "At Risk";
+                } else {
+                    status = "Off Track";
+                }
+
+            }
+
+            const tr =
+                document.createElement("tr");
+
+            tr.innerHTML = `
+
+                <td>
+                    <span class="rank-number">
+                        ${index + 1}
+                    </span>
+                </td>
+
+                <td>
+                    ${escapeHTML(area)}
+                </td>
+
+                <td>
+                    <span class="mmr-value">
+                        ${formatNumber(mmr)}
+                    </span>
+                </td>
+
+                <td>
+                    ${escapeHTML(String(year))}
+                </td>
+
+                <td>
+                    ${status}
+                </td>
+
+            `;
+
+            table.appendChild(tr);
+
+        });
+
+    } catch (error) {
+
+        console.error("Rankings error:", error);
+
+        document.getElementById("rankingTable").innerHTML = `
+            <tr>
+                <td colspan="5" class="loading">
+                    Unable to load rankings
+                </td>
+            </tr>
+        `;
+
+    }
+
+}
+
+
+/* =====================================================
+   HTML ESCAPE
+===================================================== */
+
+function escapeHTML(value) {
+
+    return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+}
+
+
+/* =====================================================
+   SIDEBAR NAVIGATION
+===================================================== */
+
+const navItems =
+    document.querySelectorAll(".nav-item");
+
+navItems.forEach(item => {
+
+    item.addEventListener("click", () => {
+
+        const targetId =
+            item.dataset.target;
+
+        const targetSection =
+            document.getElementById(targetId);
+
+        if (!targetSection) {
+
+            console.error(
+                "Section not found:",
+                targetId
+            );
+
+            return;
+        }
+
+        navItems.forEach(nav => {
+            nav.classList.remove("active");
+        });
+
+        item.classList.add("active");
+
+        targetSection.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+
+    });
+
+});
+
+
+/* =====================================================
+   ACTIVE NAVIGATION DURING SCROLL
+===================================================== */
+
+const sections =
+    document.querySelectorAll(".dashboard-section");
+
+const sectionObserver =
+    new IntersectionObserver(
+
+        entries => {
+
+            entries.forEach(entry => {
+
+                if (entry.isIntersecting) {
+
+                    const sectionId =
+                        entry.target.id;
+
+                    navItems.forEach(item => {
+
+                        item.classList.toggle(
+                            "active",
+                            item.dataset.target === sectionId
+                        );
+
+                    });
+
+                }
+
+            });
+
+        },
+
+        {
+            threshold: 0.25,
+            rootMargin: "-70px 0px -45% 0px"
+        }
+
+    );
+
+
+sections.forEach(section => {
+    sectionObserver.observe(section);
+});
+
+
+/* =====================================================
+   LOAD ENTIRE DASHBOARD
+===================================================== */
+
+async function loadDashboard() {
+
+    clearError();
+
+    await checkConnection();
+
+    try {
+
+        await loadAreas();
+
+        await Promise.all([
+            loadOverview(),
+            loadGlobalTrend(),
+            loadRankings()
+        ]);
+
+    } catch (error) {
+
+        console.error(
+            "Dashboard loading error:",
+            error
+        );
+
+        showError(
+            "Some dashboard data could not be loaded. Check that your FastAPI backend is running."
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   INITIALIZE
+===================================================== */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
+        loadDashboard();
+
+    }
+);
+
+</script>
+
+</body>
+</html>
+
